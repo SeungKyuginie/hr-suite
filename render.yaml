@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: hr-suite
+    runtime: node
+    plan: starter            # free 가능하나 SQLite 영속화 위해 starter 권장
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    disk:
+      name: hr-data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1
+    autoDeploy: true
