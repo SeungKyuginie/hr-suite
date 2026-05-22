@@ -46,6 +46,43 @@ export const api = {
   settings: {
     get: () => request('/settings'),
     update: (body) => request('/settings', { method: 'PUT', body })
+  },
+  vendors: {
+    list: (params = {}) => request('/vendors' + qs(params)),
+    get: (id) => request(`/vendors/${id}`),
+    create: (body) => request('/vendors', { method: 'POST', body }),
+    update: (id, body) => request(`/vendors/${id}`, { method: 'PUT', body }),
+    remove: (id) => request(`/vendors/${id}`, { method: 'DELETE' })
+  },
+  dailySales: {
+    list: (params = {}) => request('/daily-sales' + qs(params)),
+    summary: (params) => request('/daily-sales/summary' + qs(params)),
+    get: (id) => request(`/daily-sales/${id}`),
+    upsert: (body) => request('/daily-sales', { method: 'POST', body }),
+    close: (id, body) => request(`/daily-sales/${id}/close`, { method: 'POST', body }),
+    reopen: (id) => request(`/daily-sales/${id}/reopen`, { method: 'POST' }),
+    remove: (id) => request(`/daily-sales/${id}`, { method: 'DELETE' })
+  },
+  cardSettlements: {
+    list: (params = {}) => request('/card-settlements' + qs(params)),
+    summary: (params) => request('/card-settlements/summary' + qs(params)),
+    create: (body) => request('/card-settlements', { method: 'POST', body }),
+    deposit: (id, body) => request(`/card-settlements/${id}/deposit`, { method: 'POST', body }),
+    update: (id, body) => request(`/card-settlements/${id}`, { method: 'PUT', body }),
+    remove: (id) => request(`/card-settlements/${id}`, { method: 'DELETE' })
+  },
+  purchaseInvoices: {
+    list: (params = {}) => request('/purchase-invoices' + qs(params)),
+    vatSummary: (params) => request('/purchase-invoices/vat-summary' + qs(params)),
+    create: (body) => request('/purchase-invoices', { method: 'POST', body }),
+    update: (id, body) => request(`/purchase-invoices/${id}`, { method: 'PUT', body }),
+    remove: (id) => request(`/purchase-invoices/${id}`, { method: 'DELETE' })
+  },
+  payables: {
+    list: (params = {}) => request('/payables' + qs(params)),
+    summary: () => request('/payables/summary'),
+    pay: (id, body) => request(`/payables/${id}/pay`, { method: 'POST', body }),
+    unpay: (id) => request(`/payables/${id}/unpay`, { method: 'POST' })
   }
 };
 

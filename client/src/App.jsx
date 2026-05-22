@@ -8,6 +8,11 @@ import Leave from './pages/Leave.jsx';
 import Payroll from './pages/Payroll.jsx';
 import Payslip from './pages/Payslip.jsx';
 import Settings from './pages/Settings.jsx';
+import DailySales from './pages/DailySales.jsx';
+import CardSettlements from './pages/CardSettlements.jsx';
+import Vendors from './pages/Vendors.jsx';
+import PurchaseInvoices from './pages/PurchaseInvoices.jsx';
+import Payables from './pages/Payables.jsx';
 
 export default function App() {
   const [employees, setEmployees] = useState([]);
@@ -70,10 +75,17 @@ export default function App() {
       <aside className={`sidebar${navOpen ? ' open' : ''}`}>
         <div className="brand">HR Suite</div>
         {navLink('/', '대시보드', { end: true })}
+        <div className="nav-section">인사</div>
         {navLink('/attendance', '근태관리')}
         {navLink('/leave', '휴가관리')}
         {navLink('/payroll', '급여관리')}
         {isAdmin && navLink('/employees', '직원관리')}
+        <div className="nav-section">경리</div>
+        {navLink('/accounting/daily-sales', '일일 매출 마감')}
+        {navLink('/accounting/card-settlements', '카드 정산')}
+        {navLink('/accounting/vendors', '거래처 관리')}
+        {navLink('/accounting/purchase-invoices', '매입 세금계산서')}
+        {navLink('/accounting/payables', '미지급금')}
         {isAdmin && navLink('/settings', '설정')}
         <div className="footer">
           <div style={{ marginBottom: 6, color: '#94a3b8' }}>현재 사용자</div>
@@ -97,6 +109,11 @@ export default function App() {
           <Route path="/leave" element={<Leave currentUser={currentUser} isAdmin={isAdmin} employees={employees} />} />
           <Route path="/payroll" element={<Payroll isAdmin={isAdmin} currentUser={currentUser} />} />
           <Route path="/payroll/:id" element={<Payslip />} />
+          <Route path="/accounting/daily-sales" element={<DailySales currentUser={currentUser} />} />
+          <Route path="/accounting/card-settlements" element={<CardSettlements />} />
+          <Route path="/accounting/vendors" element={<Vendors />} />
+          <Route path="/accounting/purchase-invoices" element={<PurchaseInvoices />} />
+          <Route path="/accounting/payables" element={<Payables />} />
           {isAdmin && <Route path="/employees" element={<Employees onChange={() => api.employees.list().then(setEmployees)} />} />}
           {isAdmin && <Route path="/settings" element={<Settings />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
