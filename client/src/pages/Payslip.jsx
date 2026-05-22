@@ -24,7 +24,7 @@ export default function Payslip() {
 
       <div className="payslip">
         <h2>{fmt.ym(slip.year, slip.month)} 급여명세서</h2>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: 13 }}>
+        <div className="payslip-meta">
           <div>
             <div><b>{settings.company_name}</b></div>
             <div>대표 {settings.company_ceo} · 사업자 {settings.company_brn}</div>
