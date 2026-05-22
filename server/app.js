@@ -10,6 +10,11 @@ import attendance from './routes/attendance.js';
 import leave from './routes/leave.js';
 import payroll from './routes/payroll.js';
 import settings from './routes/settings.js';
+import vendors from './routes/vendors.js';
+import dailySales from './routes/dailySales.js';
+import cardSettlements from './routes/cardSettlements.js';
+import purchaseInvoices from './routes/purchaseInvoices.js';
+import payables from './routes/payables.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -26,6 +31,11 @@ export function createApp({ serveClient = true } = {}) {
   app.use('/api/leave', leave);
   app.use('/api/payroll', payroll);
   app.use('/api/settings', settings);
+  app.use('/api/vendors', vendors);
+  app.use('/api/daily-sales', dailySales);
+  app.use('/api/card-settlements', cardSettlements);
+  app.use('/api/purchase-invoices', purchaseInvoices);
+  app.use('/api/payables', payables);
 
   if (serveClient) {
     const clientDist = join(__dirname, '..', 'client', 'dist');

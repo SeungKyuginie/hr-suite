@@ -51,6 +51,14 @@ body {
 }
 .sidebar a:hover { background: #1e293b; color: #fff; }
 .sidebar a.active { background: var(--primary); color: #fff; }
+.sidebar .nav-section {
+  margin: 14px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  text-transform: uppercase;
+}
 .sidebar .footer {
   margin-top: auto;
   font-size: 12px;
