@@ -100,6 +100,7 @@ export default function App() {
               </option>
             ))}
           </select>
+          <div className="credit">제작 · 주식회사 인스로드</div>
         </div>
       </aside>
       <main className="main">
