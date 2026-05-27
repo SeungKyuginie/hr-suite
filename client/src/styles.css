@@ -66,6 +66,15 @@ body {
   border-top: 1px solid #1e293b;
   padding-top: 12px;
 }
+.sidebar .credit {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #1e293b;
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  letter-spacing: 0.2px;
+}
 
 .topbar { display: none; }
 .menu-toggle { display: none; }
