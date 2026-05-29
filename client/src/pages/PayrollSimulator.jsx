@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, fmt } from '../api.js';
 
 const presets = [
-  { label: '최저시급(2025)', base_salary: 2096270, overtime_hours: 0, night_hours: 0, holiday_hours: 0 },
+  { label: '최저시급(2026)', base_salary: 2156880, overtime_hours: 0, night_hours: 0, holiday_hours: 0 },
   { label: '월 300만원',     base_salary: 3000000, overtime_hours: 0, night_hours: 0, holiday_hours: 0 },
   { label: '월 400만원 + 연장 20h', base_salary: 4000000, overtime_hours: 20, night_hours: 0, holiday_hours: 0 },
   { label: '월 500만원',     base_salary: 5000000, overtime_hours: 0, night_hours: 0, holiday_hours: 0 }
@@ -108,7 +108,7 @@ export default function PayrollSimulator() {
               <div className="label">통상시급</div>
               <div className="value">{fmt.won(result.hourly_ordinary)}</div>
               <div className="delta">
-                최저시급 {fmt.won(result.minimum_wage_2025)} · {result.hourly_ordinary >= result.minimum_wage_2025
+                {result.minimum_wage_year}년 최저 {fmt.won(result.minimum_wage_hourly)} · {result.hourly_ordinary >= result.minimum_wage_hourly
                   ? <span style={{ color: 'var(--success)' }}>OK</span>
                   : <span style={{ color: 'var(--danger)' }}>미달</span>}
               </div>
