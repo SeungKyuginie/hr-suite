@@ -65,6 +65,45 @@ export function calcSocialInsurance(taxableMonthly, settings) {
 }
 
 /**
+ * 4대보험 사업주 부담분 계산 (월).
+ * 근로자 부담분과 동일 요율 + 고용보험 사업주 가산분 + 산재보험.
+ *
+ * @param {number} taxableMonthly  과세 대상 월보수액
+ * @param {object} settings
+ * @param {object} [opts]
+ * @param {number} [opts.employerEmploymentExtraRate=0.25]  고용보험 고용안정·직업능력개발 사업주 가산 (%)
+ * @param {number} [opts.industrialAccidentRate=0.7]         산재보험 요율 (%, 업종별)
+ */
+export function calcEmployerSocialInsurance(taxableMonthly, settings, opts = {}) {
+  const rNP = parseFloat(settings.rate_national_pension) / 100;
+  const rHI = parseFloat(settings.rate_health_insurance) / 100;
+  const rLTC = parseFloat(settings.rate_long_term_care) / 100;
+  const rEI = parseFloat(settings.rate_employment_insurance) / 100;
+  const rEIExtra = parseFloat(opts.employerEmploymentExtraRate ?? 0.25) / 100;
+  const rIA = parseFloat(opts.industrialAccidentRate ?? 0.7) / 100;
+
+  const npBase = Math.min(taxableMonthly, 6170000);
+  const nationalPension = Math.round((npBase * rNP) / 10) * 10;
+  const healthInsurance = Math.round((taxableMonthly * rHI) / 10) * 10;
+  const longTermCare = Math.round((healthInsurance * rLTC) / 10) * 10;
+  const employmentInsurance = Math.round((taxableMonthly * (rEI + rEIExtra)) / 10) * 10;
+  const industrialAccident = Math.round((taxableMonthly * rIA) / 10) * 10;
+
+  return {
+    nationalPension,
+    healthInsurance,
+    longTermCare,
+    employmentInsurance,
+    industrialAccident,
+    rates: {
+      employment_insurance_total: (parseFloat(settings.rate_employment_insurance) + parseFloat(opts.employerEmploymentExtraRate ?? 0.25)).toFixed(2),
+      industrial_accident: parseFloat(opts.industrialAccidentRate ?? 0.7)
+    },
+    total: nationalPension + healthInsurance + longTermCare + employmentInsurance + industrialAccident
+  };
+}
+
+/**
  * 근로소득 간이세액 근사 계산.
  * 실 간이세액표(국세청)에 100% 일치하지 않는다 — 누진세율 + 근로소득공제·세액공제를 단순화한 근사식이다.
  *

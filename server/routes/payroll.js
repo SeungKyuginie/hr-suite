@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { store, nextId, findById, removeById, getSettings } from '../store.js';
 import { computePayslip } from '../lib/payrollCalc.js';
-import { calcAllowances, calcSocialInsurance, calcIncomeTax, hourlyOrdinaryWage } from '../lib/payrollCalc.js';
+import { calcAllowances, calcSocialInsurance, calcEmployerSocialInsurance, calcIncomeTax, hourlyOrdinaryWage } from '../lib/payrollCalc.js';
 
 const router = Router();
 
@@ -96,20 +96,39 @@ router.delete('/:id', (req, res) => {
 });
 
 // 급여 시뮬레이션 — DB 저장 없음, 즉시 계산
+// 입력 모드:
+//   monthly  : base_salary 직접 입력
+//   hourly   : hourly_wage + regular_hours → base_salary 역산
 router.post('/simulate', (req, res) => {
   const b = req.body ?? {};
   const settings = getSettings();
-  const baseSalary = Number(b.base_salary ?? 0);
-  if (baseSalary <= 0) return res.status(400).json({ error: 'base_salary required' });
+  const mode = b.mode === 'hourly' ? 'hourly' : 'monthly';
+
+  const regularHours = Number(b.regular_hours ?? 209);
+  let baseSalary;
+  let hourlyWageInput = Number(b.hourly_wage ?? 0);
+  if (mode === 'hourly') {
+    if (hourlyWageInput <= 0 || regularHours <= 0) {
+      return res.status(400).json({ error: 'hourly_wage, regular_hours required for hourly mode' });
+    }
+    baseSalary = Math.round(hourlyWageInput * regularHours);
+  } else {
+    baseSalary = Number(b.base_salary ?? 0);
+    if (baseSalary <= 0) return res.status(400).json({ error: 'base_salary required' });
+  }
 
   const dependents = Number(b.dependents ?? 1);
   const childrenUnder20 = Number(b.children_under_20 ?? 0);
   const mealAllowanceInput = Number(b.meal_allowance ?? 0);
   const mealAllowance = Math.min(mealAllowanceInput, 200000);
 
+  // 사업주 가산요율 (옵션)
+  const employerEmploymentExtraRate = Number(b.employer_employment_extra_rate ?? 0.25);
+  const industrialAccidentRate = Number(b.industrial_accident_rate ?? 0.7);
+
   // 가상 월 근로 집계 (사용자 입력)
   const monthAgg = {
-    regular: Number(b.regular_hours ?? 209),
+    regular: regularHours,
     overtime: Number(b.overtime_hours ?? 0),
     night: Number(b.night_hours ?? 0),
     holiday: Number(b.holiday_hours ?? 0),
@@ -117,25 +136,51 @@ router.post('/simulate', (req, res) => {
     days: Number(b.work_days ?? 22)
   };
 
-  const allowances = calcAllowances(baseSalary, monthAgg, settings);
-  const taxable = baseSalary + allowances.overtimePay + allowances.nightPay + allowances.holidayPay;
+  // 통상시급 계산 시 입력된 regular_hours를 적용 (209h 기본)
+  const hourly = hourlyOrdinaryWage(baseSalary, regularHours);
+  const overtimeMult = parseFloat(settings.overtime_multiplier ?? 1.5);
+  const nightMult = parseFloat(settings.night_multiplier ?? 0.5);
+  const holiday8 = parseFloat(settings.holiday_multiplier_8h ?? 1.5);
+  const holidayOver = parseFloat(settings.holiday_multiplier_over_8h ?? 2.0);
+  const overtimePay = Math.round(hourly * monthAgg.overtime * overtimeMult);
+  const nightPay = Math.round(hourly * monthAgg.night * nightMult);
+  const holidayPay =
+    Math.round(hourly * monthAgg.holiday * holiday8) +
+    Math.round(hourly * monthAgg.holidayOver8 * holidayOver);
+
+  const taxable = baseSalary + overtimePay + nightPay + holidayPay;
   const grossPay = taxable + mealAllowance;
+
   const si = calcSocialInsurance(taxable, settings);
+  const employerSI = calcEmployerSocialInsurance(taxable, settings,
+    { employerEmploymentExtraRate, industrialAccidentRate });
+
   const incomeTax = calcIncomeTax(taxable, dependents, childrenUnder20);
   const localTax = Math.round((incomeTax * 0.1) / 10) * 10;
   const totalDeduction = si.total + incomeTax + localTax;
   const netPay = grossPay - totalDeduction;
 
-  const hourly = hourlyOrdinaryWage(baseSalary);
+  // 회사 총 인건비 = 직원 지급 + 사업주 부담
+  const employerTotalCost = grossPay + employerSI.total;
 
   res.json({
-    input: { base_salary: baseSalary, dependents, children_under_20: childrenUnder20,
-      meal_allowance: mealAllowance, monthAgg },
+    mode,
+    input: {
+      base_salary: baseSalary,
+      hourly_wage: mode === 'hourly' ? hourlyWageInput : null,
+      regular_hours: regularHours,
+      dependents,
+      children_under_20: childrenUnder20,
+      meal_allowance: mealAllowance,
+      monthAgg
+    },
     rates: {
       national_pension: settings.rate_national_pension,
       health_insurance: settings.rate_health_insurance,
       long_term_care: settings.rate_long_term_care,
-      employment_insurance: settings.rate_employment_insurance
+      employment_insurance: settings.rate_employment_insurance,
+      employer_employment_extra: employerEmploymentExtraRate,
+      industrial_accident: industrialAccidentRate
     },
     hourly_ordinary: Math.round(hourly),
     minimum_wage_year: 2026,
@@ -143,9 +188,9 @@ router.post('/simulate', (req, res) => {
     minimum_wage_monthly_209h: 2156880,
     earnings: {
       base_salary: baseSalary,
-      overtime_pay: allowances.overtimePay,
-      night_pay: allowances.nightPay,
-      holiday_pay: allowances.holidayPay,
+      overtime_pay: overtimePay,
+      night_pay: nightPay,
+      holiday_pay: holidayPay,
       meal_allowance: mealAllowance,
       taxable,
       gross_pay: grossPay
@@ -160,14 +205,26 @@ router.post('/simulate', (req, res) => {
       local_tax: localTax,
       total: totalDeduction
     },
+    employer_burden: {
+      national_pension: employerSI.nationalPension,
+      health_insurance: employerSI.healthInsurance,
+      long_term_care: employerSI.longTermCare,
+      employment_insurance: employerSI.employmentInsurance,
+      industrial_accident: employerSI.industrialAccident,
+      total: employerSI.total,
+      employment_insurance_total_rate: employerSI.rates.employment_insurance_total,
+      industrial_accident_rate: employerSI.rates.industrial_accident
+    },
+    employer_total_cost: employerTotalCost,
     net_pay: netPay,
     conversions: {
       hourly: Math.round(hourly),
       daily_8h: Math.round(hourly * 8),
       weekly_40h: Math.round(hourly * 40),
-      monthly_209h: baseSalary,
+      monthly_base: baseSalary,
       annual: baseSalary * 12,
-      annual_net: netPay * 12
+      annual_net: netPay * 12,
+      annual_employer_cost: employerTotalCost * 12
     }
   });
 });
