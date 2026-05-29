@@ -41,7 +41,8 @@ export const api = {
     list: (params = {}) => request('/payroll' + qs(params)),
     get: (id) => request(`/payroll/${id}`),
     calculate: (body) => request('/payroll/calculate', { method: 'POST', body }),
-    calculateAll: (body) => request('/payroll/calculate-all', { method: 'POST', body })
+    calculateAll: (body) => request('/payroll/calculate-all', { method: 'POST', body }),
+    simulate: (body) => request('/payroll/simulate', { method: 'POST', body })
   },
   settings: {
     get: () => request('/settings'),

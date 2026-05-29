@@ -7,6 +7,7 @@ import Attendance from './pages/Attendance.jsx';
 import Leave from './pages/Leave.jsx';
 import Payroll from './pages/Payroll.jsx';
 import Payslip from './pages/Payslip.jsx';
+import PayrollSimulator from './pages/PayrollSimulator.jsx';
 import Settings from './pages/Settings.jsx';
 import DailySales from './pages/DailySales.jsx';
 import CardSettlements from './pages/CardSettlements.jsx';
@@ -79,6 +80,7 @@ export default function App() {
         {navLink('/attendance', '근태관리')}
         {navLink('/leave', '휴가관리')}
         {navLink('/payroll', '급여관리')}
+        {navLink('/payroll-simulator', '급여 시뮬레이션')}
         {isAdmin && navLink('/employees', '직원관리')}
         <div className="nav-section">경리</div>
         {navLink('/accounting/daily-sales', '일일 매출 마감')}
@@ -110,6 +112,7 @@ export default function App() {
           <Route path="/leave" element={<Leave currentUser={currentUser} isAdmin={isAdmin} employees={employees} />} />
           <Route path="/payroll" element={<Payroll isAdmin={isAdmin} currentUser={currentUser} />} />
           <Route path="/payroll/:id" element={<Payslip />} />
+          <Route path="/payroll-simulator" element={<PayrollSimulator />} />
           <Route path="/accounting/daily-sales" element={<DailySales currentUser={currentUser} />} />
           <Route path="/accounting/card-settlements" element={<CardSettlements />} />
           <Route path="/accounting/vendors" element={<Vendors />} />
