@@ -138,7 +138,9 @@ router.post('/simulate', (req, res) => {
       employment_insurance: settings.rate_employment_insurance
     },
     hourly_ordinary: Math.round(hourly),
-    minimum_wage_2025: 10030,
+    minimum_wage_year: 2026,
+    minimum_wage_hourly: 10320,
+    minimum_wage_monthly_209h: 2156880,
     earnings: {
       base_salary: baseSalary,
       overtime_pay: allowances.overtimePay,
